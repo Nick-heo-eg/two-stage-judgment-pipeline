@@ -10,6 +10,11 @@
 
 This system demonstrates **LLM-based judgment using structured observation data and two-stage processing for improved accuracy**.
 
+> **This system does not aim to improve model intelligence.
+> It aims to relocate responsibility.**
+
+Instead of asking "how well can LLMs judge?", we ask "where should judgment happen?" By separating observation (OpenCV), decision (phi3), and explanation (Mistral) into distinct stages, we can verify which component failed when errors occur.
+
 ### Key Innovation
 
 Traditional approach:
@@ -209,6 +214,8 @@ Processes images through OpenCV to extract **structural features**:
 
 This provides numeric data for LLM processing without semantic labels.
 
+**Why this matters:** Traditional vision-LLMs receive images directly, mixing observation and interpretation in one step. By separating them, we can verify: "Did the observation fail, or did the judgment fail?" This is the difference between debugging a black box and debugging a pipeline.
+
 ### Two-Stage Processing
 
 - **Stage 1 (phi3)**: Decision Making
@@ -221,7 +228,7 @@ This provides numeric data for LLM processing without semantic labels.
   - Uses observation data and Stage 1 result
   - Generates natural language descriptions
 
-This separation improves clarity and allows for specialized models at each stage.
+**The key insight:** Stage 1 doesn't "understand" fingers - it extracts numbers from structured data. Stage 2 doesn't "judge" - it translates the decision into language. Neither component does everything, so neither can hide its failures behind the other's success.
 
 ### Quality Monitoring
 
