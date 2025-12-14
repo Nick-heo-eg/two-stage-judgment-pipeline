@@ -36,7 +36,7 @@ JudgmentState = Literal["VALUE", "INDETERMINATE", "STOP"]
 
 @dataclass
 class ObservationRecord:
-    """관측 기록 (개념 없음)"""
+    """Observation record (concept-free)"""
     record_id: str
     timestamp: str
     estimated_protrusions: int
@@ -52,13 +52,13 @@ class ObservationRecord:
 
 @dataclass
 class Stage1JudgmentResult:
-    """Stage 1: TinyLlama 판정 결과"""
+    """Stage 1: TinyLlama judgment result"""
     record_id: str
     timestamp: str
 
-    # Judgment (판정)
+    # Judgment
     state: JudgmentState  # VALUE, INDETERMINATE, STOP
-    value: Optional[int]  # state == VALUE일 때만 유효
+    value: Optional[int]  # Only valid when state == VALUE
 
     # Raw outputs
     raw_response: str
@@ -71,15 +71,15 @@ class Stage1JudgmentResult:
 
 @dataclass
 class Stage2NarrativeResult:
-    """Stage 2: Mistral 서술 결과"""
+    """Stage 2: Mistral narrative result"""
     record_id: str
     timestamp: str
 
-    # Stage 1 결과 (읽기 전용)
+    # Stage 1 result (read-only)
     stage1_state: JudgmentState
     stage1_value: Optional[int]
 
-    # Narrative (설명)
+    # Narrative (explanation)
     explanation: str
 
     # Prior intrusion detection
@@ -96,17 +96,17 @@ class Stage2NarrativeResult:
 
 @dataclass
 class TwoStagePipelineResult:
-    """전체 파이프라인 결과"""
+    """Complete pipeline result"""
     record_id: str
     timestamp: str
 
-    # Stage 1 (판정)
+    # Stage 1 (judgment)
     stage1_result: Stage1JudgmentResult
 
-    # Stage 2 (서술) - STOP/INDETERMINATE면 None
+    # Stage 2 (narrative) - None if STOP/INDETERMINATE
     stage2_result: Optional[Stage2NarrativeResult]
 
-    # Final decision (항상 Stage 1 판정)
+    # Final decision (always from Stage 1 judgment)
     final_state: JudgmentState
     final_value: Optional[int]
 
@@ -116,7 +116,7 @@ class TwoStagePipelineResult:
 
 
 class TinyLlamaJudge:
-    """Stage 1: 경량 LLM 판정기 (VALUE/INDETERMINATE/STOP)"""
+    """Stage 1: Lightweight LLM judge (VALUE/INDETERMINATE/STOP)"""
 
     def __init__(
         self,
@@ -144,19 +144,19 @@ class TinyLlamaJudge:
 
         start_time = time.time()
 
-        # 관측 기록 직렬화
+        # Serialize observation record
         obs_text = self._serialize_observation(observation)
 
-        # 판정 프롬프트
+        # Build judgment prompt
         prompt = self._build_judgment_prompt(obs_text)
 
         logger.info("Calling TinyLlama for judgment...")
         logger.info("")
 
-        # Ollama 호출
+        # Call Ollama
         raw_response = self._call_ollama(prompt)
 
-        # 응답 파싱
+        # Parse response
         state, value, reasoning = self._parse_judgment(raw_response)
 
         latency = time.time() - start_time
@@ -180,7 +180,7 @@ class TinyLlamaJudge:
         )
 
     def _serialize_observation(self, observation: ObservationRecord) -> str:
-        """관측 기록 → 텍스트 (개념 없음)"""
+        """Observation record → text (concept-free)"""
         return f"""Observation Record: {observation.record_id}
 
 Structural Measurements (NO concept labels):
@@ -203,14 +203,14 @@ Output ONLY the number.
 Answer:"""
 
     def _call_ollama(self, prompt: str) -> str:
-        """Ollama API 호출"""
+        """Call Ollama API"""
         payload = {
             "model": self.model,
             "prompt": prompt,
             "stream": False,
             "options": {
-                "temperature": 0.0,  # 결정론적
-                "num_predict": 10,   # 매우 짧은 응답
+                "temperature": 0.0,  # Deterministic
+                "num_predict": 10,   # Very short response
                 "top_p": 1.0,
             }
         }
@@ -230,30 +230,30 @@ Answer:"""
             return "ERROR"
 
     def _parse_judgment(self, response: str) -> Tuple[JudgmentState, Optional[int], str]:
-        """응답 파싱: (state, value, reasoning) - 유연한 추출"""
+        """Parse response: (state, value, reasoning) - flexible extraction"""
         response_clean = response.strip()
 
-        # STOP 체크 (전체 응답에서)
+        # Check for STOP (in full response)
         if "STOP" in response_clean.upper():
             return "STOP", None, "Evidence source untraceable"
 
-        # INDETERMINATE 체크 (전체 응답에서)
+        # Check for INDETERMINATE (in full response)
         if "INDETERMINATE" in response_clean.upper():
             return "INDETERMINATE", None, "Insufficient evidence"
 
-        # VALUE (정수) 추출 - 전체 응답에서 첫 번째 숫자 찾기
+        # Extract VALUE (integer) - find first number in full response
         numbers = re.findall(r'\b\d+\b', response_clean)
         if numbers:
             value = int(numbers[0])
             return "VALUE", value, f"Based on structural observation: {value}"
 
-        # 파싱 실패 → INDETERMINATE
-        first_line = response_clean.split("\n")[0][:50]  # 처음 50자만
+        # Parse failed → INDETERMINATE
+        first_line = response_clean.split("\n")[0][:50]  # First 50 chars only
         return "INDETERMINATE", None, f"Parse failed: {first_line}"
 
 
 class MistralNarrator:
-    """Stage 2: Mistral 서술자 (설명만, 판정 권한 없음)"""
+    """Stage 2: Mistral narrator (explanation only, no judgment authority)"""
 
     def __init__(
         self,
@@ -288,19 +288,19 @@ class MistralNarrator:
 
         start_time = time.time()
 
-        # 관측 기록 + Stage 1 결과
+        # Observation record + Stage 1 result
         context = self._build_narrative_context(observation, stage1_result)
 
-        # 서술 프롬프트
+        # Build narrative prompt
         prompt = self._build_narrative_prompt(context)
 
         logger.info("Calling Mistral for explanation...")
         logger.info("")
 
-        # Ollama 호출
+        # Call Ollama
         raw_response = self._call_ollama(prompt)
 
-        # 상식 침투 감지
+        # Detect prior intrusion
         prior_detected, evidence = self._detect_prior_intrusion(raw_response)
 
         latency = time.time() - start_time
@@ -331,7 +331,7 @@ class MistralNarrator:
         observation: ObservationRecord,
         stage1_result: Stage1JudgmentResult,
     ) -> str:
-        """서술 컨텍스트 구성"""
+        """Build narrative context"""
         return f"""OBSERVATION RECORD:
 {TinyLlamaJudge(self.ollama_host, "")._serialize_observation(observation)}
 
@@ -355,7 +355,7 @@ If you use common sense, mention "PRIOR_INTRUSION" explicitly.
 EXPLANATION:"""
 
     def _call_ollama(self, prompt: str) -> str:
-        """Ollama API 호출"""
+        """Call Ollama API"""
         payload = {
             "model": self.model,
             "prompt": prompt,
@@ -424,7 +424,7 @@ class TwoStageJudgmentPipeline:
         logger.info("╚" + "=" * 78 + "╝")
         logger.info("\n")
 
-        # Stage 1: TinyLlama 판정
+        # Stage 1: TinyLlama judgment
         stage1_result = self.judge.judge(observation)
 
         # Early termination check
@@ -444,7 +444,7 @@ class TwoStageJudgmentPipeline:
                 prior_intrusion_detected=False,
             )
 
-        # Stage 2: Mistral 서술 (VALUE인 경우만)
+        # Stage 2: Mistral narrative (only for VALUE case)
         logger.info(f"✅ Stage 1 completed: VALUE = {stage1_result.value}")
         logger.info(f"   Proceeding to Stage 2 (Narrative)...")
         logger.info("")
@@ -473,7 +473,7 @@ class TwoStageJudgmentPipeline:
         )
 
     def save_result(self, result: TwoStagePipelineResult, filepath: Path):
-        """결과 저장"""
+        """Save result"""
         with filepath.open("w", encoding="utf-8") as f:
             json.dump(asdict(result), f, indent=2, ensure_ascii=False)
         logger.info(f"✅ Result saved: {filepath}")
@@ -484,7 +484,7 @@ def test_reproducibility(
     observation: ObservationRecord,
     n_runs: int = 3,
 ) -> bool:
-    """재현성 테스트: 동일 입력 → 동일 판정"""
+    """Reproducibility test: same input → same judgment"""
 
     logger.info("\n")
     logger.info("=" * 80)
@@ -502,7 +502,7 @@ def test_reproducibility(
         logger.info(f"  Result: {result.final_state} = {result.final_value}")
         logger.info("")
 
-    # 모두 동일한지 확인
+    # Check if all results are identical
     all_same = len(set(results)) == 1
 
     logger.info("Results:")
@@ -521,7 +521,7 @@ def test_reproducibility(
 
 
 def main():
-    """메인 실행"""
+    """Main execution"""
 
     # Load observation record from previous run
     obs_file = Path("observation_record_real.json")
