@@ -43,8 +43,9 @@ def process_image_to_observation(image_path: str) -> ObservationRecord:
     # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # Apply threshold
-    _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV)
+    # Apply adaptive threshold (better for varying lighting and transparent backgrounds)
+    thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                    cv2.THRESH_BINARY_INV, 11, 2)
 
     # Find contours
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -62,7 +63,7 @@ def process_image_to_observation(image_path: str) -> ObservationRecord:
             bbox_height=0,
             aspect_ratio=0,
             image_path=image_path,
-            processing_method="opencv_convexity_defects"
+            processing_method="opencv_adaptive_threshold"
         )
 
     # Get largest contour
@@ -103,7 +104,7 @@ def process_image_to_observation(image_path: str) -> ObservationRecord:
         bbox_height=h,
         aspect_ratio=aspect_ratio,
         image_path=image_path,
-        processing_method="opencv_convexity_defects"
+        processing_method="opencv_adaptive_threshold"
     )
 
 
