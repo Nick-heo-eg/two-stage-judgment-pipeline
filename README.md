@@ -4,7 +4,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Status: Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen.svg)]()
+
+**Note**: This is a public demo repository. For access to the full implementation, contact the repository owner.
 
 ## 🎯 Overview
 
@@ -58,82 +59,37 @@ Final Result
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-```bash
-# Install Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Pull required models
-ollama pull phi3:mini
-ollama pull mistral:instruct
-
-# Install Python dependencies
-pip install opencv-python numpy requests
-```
-
-### Installation
-
-```bash
-git clone https://github.com/Nick-heo-eg/two-stage-judgment-pipeline.git
-cd two-stage-judgment-pipeline
-```
-
-### Basic Usage
+### API Overview
 
 ```python
-from src.two_stage_judgment_pipeline import TwoStageJudgmentPipeline, ObservationRecord
+# Conceptual API (implementation not included in public repo)
 
-# Create observation record (from OpenCV or other source)
+from two_stage_pipeline import TwoStageJudgmentPipeline, ObservationRecord
+
+# Create observation record
 observation = ObservationRecord(
     record_id="OBS_001",
-    timestamp="2025-12-14T00:00:00",
     estimated_protrusions=6,
     convexity_defects=5,
-    contour_area=158291.5,
-    hull_points=62,
-    bbox_width=525,
-    bbox_height=535,
-    aspect_ratio=0.98,
-    image_path="/path/to/image.jpg",
-    processing_method="opencv_convexity_defects"
+    # ... other structural measurements
 )
 
 # Execute two-stage pipeline
 pipeline = TwoStageJudgmentPipeline()
 result = pipeline.execute(observation)
 
-print(f"Final Decision: {result.final_state} = {result.final_value}")
+print(f"Decision: {result.final_state} = {result.final_value}")
 ```
 
-### Example: Process Real Image
+### Example Output
 
-```bash
-# Place your test image and update the path in the script
-python examples/process_fingers2.py
 ```
-
-**Output:**
-```
-================================================================================
-FINAL RESULT
-================================================================================
-Image: fingers.jpg
-Observation ID: OBS_fingers_20251214_150302
-Detected Protrusions: 6
-
-Stage 1 (phi3 Judge):
-  State: VALUE
-  Value: 6
-  Latency: 65.35s
-
-Stage 2 (Mistral Narrator):
-  Prior Intrusion: False
-  Latency: 180.36s
-
+Stage 1 (phi3 Judge): VALUE = 6
+Stage 2 (Mistral Narrator): Generated explanation
 Final Decision: VALUE = 6
-================================================================================
 ```
+
+**For full implementation, contact repository owner.**
 
 ## 📊 Validation Results
 
@@ -187,20 +143,16 @@ This is a proof-of-concept demonstrating architectural feasibility. The single t
 ## 📁 Repository Structure
 
 ```
-two-stage-judgment-pipeline/
-├── src/
-│   └── two_stage_judgment_pipeline.py  # Core pipeline implementation
+two-stage-judgment-pipeline/ (PUBLIC - Demo Only)
 ├── examples/
-│   └── process_fingers2.py             # Real image processing example
-├── tests/
-│   └── test_judge_models.py            # Model comparison tests
+│   └── process_fingers2.py             # Demo usage example
 ├── docs/
-│   ├── COMPLETE_SUCCESS_REPORT.md      # Full validation report
-│   ├── PHI3_SUCCESS_SUMMARY.md         # Model comparison analysis
-│   └── TWO_STAGE_PIPELINE_SUMMARY.md   # Technical details
+│   └── PHI3_SUCCESS_SUMMARY.md         # Model selection rationale
 ├── README.md
 └── LICENSE
 ```
+
+**Full implementation available in private repository.**
 
 ## 🎓 Key Concepts
 
@@ -260,31 +212,12 @@ pipeline = TwoStageJudgmentPipeline(
 
 ## 📖 Documentation
 
-- [Complete Success Report](docs/COMPLETE_SUCCESS_REPORT.md) - Full validation results
 - [phi3 Success Summary](docs/PHI3_SUCCESS_SUMMARY.md) - Model selection rationale
-- [Technical Details](docs/TWO_STAGE_PIPELINE_SUMMARY.md) - Implementation guide
+- Full technical documentation available in private repository
 
 ## 🤝 Contributing
 
-Contributions welcome! Areas for improvement:
-
-**Validation Enhancement:**
-- Additional test images with diverse protrusion counts
-- Ground truth labeling for accuracy measurement
-- Negative control tests (noise images → STOP expected)
-- Prior intrusion triggering tests
-
-**Pipeline Improvements:**
-- Alternative observation methods (MediaPipe, YOLO, etc.)
-- Different model combinations
-- Performance optimization
-- Error handling edge cases
-
-Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+This is a demo repository. For collaboration on the full implementation, please contact the repository owner.
 
 ## 📄 License
 
