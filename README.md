@@ -75,7 +75,7 @@ pip install opencv-python numpy requests
 ### Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/two-stage-judgment-pipeline.git
+git clone https://github.com/Nick-heo-eg/two-stage-judgment-pipeline.git
 cd two-stage-judgment-pipeline
 ```
 
@@ -279,7 +279,7 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 ## 📞 Contact
 
-- GitHub Issues: [Report bugs or request features](https://github.com/YOUR_USERNAME/two-stage-judgment-pipeline/issues)
+- GitHub Issues: [Report bugs or request features](https://github.com/Nick-heo-eg/two-stage-judgment-pipeline/issues)
 
 ## 🌟 Citation
 
@@ -290,7 +290,7 @@ If you use this work in your research, please cite:
   title = {Two-Stage Judgment Pipeline: Concept-Free LLM Inference},
   author = {Echo Judgment System Team},
   year = {2025},
-  url = {https://github.com/YOUR_USERNAME/two-stage-judgment-pipeline}
+  url = {https://github.com/Nick-heo-eg/two-stage-judgment-pipeline}
 }
 ```
 
