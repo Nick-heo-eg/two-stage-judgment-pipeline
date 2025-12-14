@@ -1,6 +1,6 @@
 # Two-Stage Judgment Pipeline
 
-> **A novel approach to LLM-based judgment that prevents concept contamination through external observation and role-separated inference.**
+> **LLM-based judgment using external observation and two-stage processing.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -8,18 +8,18 @@
 
 ## 🎯 Overview
 
-This system demonstrates that **LLMs can make judgments based purely on structural data without relying on common sense, priors, or concept labels**.
+This system demonstrates **LLM-based judgment using structured observation data and two-stage processing for improved accuracy**.
 
 ### Key Innovation
 
 Traditional approach:
 ```
-Image → LLM → "I see 6 fingers" (prior contamination ❌)
+Image → LLM → "I see 6 fingers"
 ```
 
-Our approach:
+Two-stage approach:
 ```
-Image → OpenCV → {protrusions: 6} → LLM → "6" (structure only ✅)
+Image → OpenCV → {protrusions: 6} → phi3 → "6" → Mistral → Explanation
 ```
 
 ## 🏗️ Architecture
@@ -29,32 +29,30 @@ Real Image Input
     ↓
 [External Observation Layer]
   - OpenCV processing
-  - NO concept labels
-  - Output: Structural primitives only
+  - Extracts structural features
+  - Output: Numeric measurements
     ↓
-[Stage 1: phi3:mini Judge]
-  - PRIMARY JUDGE
+[Stage 1: phi3:mini]
+  - Makes primary decision
   - Outputs: VALUE | INDETERMINATE | STOP
-  - NO common sense, NO priors
-  - Judgment authority: EXCLUSIVE
+  - Deterministic (temperature=0.0)
     ↓ (if VALUE)
-[Stage 2: Mistral Narrator]
-  - SECONDARY NARRATOR
+[Stage 2: Mistral]
   - Generates explanations
-  - NO judgment authority
-  - Prior intrusion detection
+  - Describes decision rationale
+  - Quality monitoring
     ↓
 Final Result
 ```
 
 ## ✨ Features
 
-- **🔒 Concept-Free Observation**: External observation layer prevents concept contamination
-- **⚖️ Role Separation**: Clear authority hierarchy between judge and narrator
-- **🔄 100% Reproducibility**: Same input → same output (deterministic)
-- **🚫 Prior Prevention**: No common sense or world knowledge in judgment
+- **🔒 Structured Observation**: External observation layer uses OpenCV for feature extraction
+- **⚖️ Two-Stage Processing**: Decision making separated from explanation generation
+- **🔄 100% Reproducibility**: Deterministic outputs (temperature=0.0)
 - **⚡ Performance**: <100s total latency with caching
 - **📊 Multi-Image Support**: Tested with multiple real images
+- **🔍 Quality Monitoring**: Tracks use of concept labels in explanations
 
 ## 🚀 Quick Start
 
@@ -148,13 +146,13 @@ Final Decision: VALUE = 6
 
 | Criterion | Status | Evidence |
 |-----------|--------|----------|
-| External Observation | ✅ | OpenCV processes without concepts |
-| Concept-Free Records | ✅ | NO "hand"/"finger" labels |
+| External Observation | ✅ | OpenCV extracts structural features |
+| Structured Records | ✅ | Numeric measurements only |
 | phi3 VALUE Extraction | ✅ | Outputs "3" and "6" correctly |
-| Judgment Authority | ✅ | Final decision = Stage 1 (always) |
-| Mistral Narration | ✅ | Explanations without judgment |
+| Two-Stage Processing | ✅ | Stage 1 decides, Stage 2 explains |
+| Mistral Explanations | ✅ | Natural language descriptions |
 | Reproducibility | ✅ | 100% consistency (N=3) |
-| Prior Prevention | ✅ | No concept keywords in judgment |
+| Quality Monitoring | ✅ | Tracks concept label usage |
 | Multi-Image Support | ✅ | Different images → correct outputs |
 
 ## 🔬 Technical Details
@@ -204,32 +202,34 @@ two-stage-judgment-pipeline/
 
 ### External Observation Layer
 
-Processes images through OpenCV to extract **structural primitives only**:
-- ✅ Allowed: "protrusion", "valley", "defect", "contour"
-- ❌ Forbidden: "hand", "finger", "thumb", "palm"
+Processes images through OpenCV to extract **structural features**:
+- Convexity defects
+- Contour analysis
+- Hull points
+- Bounding box measurements
 
-**Why?** Prevents LLM from accessing concept labels that could trigger common sense reasoning.
+This provides numeric data for LLM processing without semantic labels.
 
-### Role Separation
+### Two-Stage Processing
 
-- **Stage 1 (phi3)**: PRIMARY JUDGE
-  - Makes final decision
+- **Stage 1 (phi3)**: Decision Making
+  - Extracts value from observation data
   - Outputs: VALUE, INDETERMINATE, or STOP
-  - Has exclusive judgment authority
+  - Deterministic (temperature=0.0)
 
-- **Stage 2 (Mistral)**: SECONDARY NARRATOR
-  - Explains Stage 1's decision
-  - Receives judgment as READ-ONLY
-  - Cannot override or modify judgment
+- **Stage 2 (Mistral)**: Explanation Generation
+  - Describes how decision was made
+  - Uses observation data and Stage 1 result
+  - Generates natural language descriptions
 
-**Why?** Clear authority prevents role confusion and maintains judgment integrity.
+This separation improves clarity and allows for specialized models at each stage.
 
-### Prior Intrusion Detection
+### Quality Monitoring
 
-Monitors Stage 2 for unwanted common sense usage:
-- Concept keywords: hand, finger, thumb, palm
-- Prior reasoning: "typically", "usually", "based on experience"
-- Explicit acknowledgment: "PRIOR_INTRUSION" flag
+Tracks Stage 2 outputs for quality control:
+- Detects use of concept labels (hand, finger, etc.)
+- Monitors for explicit "PRIOR_INTRUSION" acknowledgment
+- Helps maintain structured reasoning approach
 
 ## 🔧 Configuration
 

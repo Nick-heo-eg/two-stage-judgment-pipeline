@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """
-Two-Stage Judgment Pipeline: TinyLlama (Judge) + Mistral (Narrator)
+Two-Stage Judgment Pipeline: phi3 (Judge) + Mistral (Narrator)
 
-역할 분리:
-- Stage 1 (TinyLlama): 1차 판정기 (VALUE/INDETERMINATE/STOP)
-- Stage 2 (Mistral): 2차 서술자/감사자 (설명만, 판정 권한 없음)
+Architecture:
+- Stage 1: Primary decision using phi3:mini (outputs VALUE/INDETERMINATE/STOP)
+- Stage 2: Explanation generation using Mistral (describes Stage 1 decision)
 
-핵심 원칙:
-1. 판정 권한은 항상 TinyLlama에 고정
-2. Mistral은 설명만 수행 (재판정 금지)
-3. 상식 기반 자동 보정 차단
-4. 근거 출처 불명 시 즉시 STOP
+Design:
+- Stage 1 makes the final decision
+- Stage 2 generates explanations based on observation data
+- Both stages use structured observation records (no concept labels)
 """
 
 import json
@@ -129,17 +128,12 @@ class TinyLlamaJudge:
 
     def judge(self, observation: ObservationRecord) -> Stage1JudgmentResult:
         """
-        1차 판정: Observation Record → VALUE/INDETERMINATE/STOP
+        Primary judgment: Observation Record → VALUE/INDETERMINATE/STOP
 
-        역할:
-        - 규칙 적용
-        - 멈춤 판단
-        - 근거 출처 추적 실패 시 STOP/INDETERMINATE
-
-        금지:
-        - 상식(prior) 사용
-        - 개념 기반 추론
-        - 임의 보정
+        Outputs:
+        - VALUE: Valid numeric result extracted
+        - INDETERMINATE: Insufficient data or parsing failure
+        - STOP: Unable to trace evidence source
         """
         logger.info("=" * 80)
         logger.info("STAGE 1: TINYLLAMA JUDGMENT")
@@ -200,9 +194,7 @@ Structural Measurements (NO concept labels):
 Processing method: {observation.processing_method}"""
 
     def _build_judgment_prompt(self, obs_text: str) -> str:
-        """판정 프롬프트 (상식 차단) - TinyLlama 최적화"""
-        # TinyLlama는 매우 작은 모델이므로 극도로 단순한 프롬프트 필요
-        # 직접적인 지시: "estimated_protrusions" 값을 그대로 출력
+        """Build simple extraction prompt optimized for small models"""
         return f"""Read the observation data and output the "estimated_protrusions" value.
 
 {obs_text}
@@ -277,17 +269,15 @@ class MistralNarrator:
         stage1_result: Stage1JudgmentResult,
     ) -> Stage2NarrativeResult:
         """
-        2차 서술: Stage 1 판정 결과 설명
+        Generate explanation for Stage 1 decision.
 
-        역할:
-        - 판정 결과 설명
-        - 상식 침투 감지
-        - 감사자 역할
+        Inputs:
+        - observation: Structured observation record
+        - stage1_result: Primary judgment from Stage 1
 
-        금지:
-        - 판정 결과 수정
-        - 재판정
-        - 판정 권한 행사
+        Outputs:
+        - explanation: Natural language description
+        - quality_check: Detects use of concept labels
         """
         logger.info("=" * 80)
         logger.info("STAGE 2: MISTRAL NARRATIVE")
@@ -351,22 +341,16 @@ STAGE 1 JUDGMENT (PRIMARY JUDGE - TinyLlama):
 - Reasoning: {stage1_result.reasoning_trace}"""
 
     def _build_narrative_prompt(self, context: str) -> str:
-        """서술 프롬프트 (판정 권한 없음 명시)"""
-        return f"""You are a NARRATOR/AUDITOR. Your role is to EXPLAIN the judgment, NOT to make or modify it.
-
-CRITICAL RULES:
-1. You have NO authority to change the judgment
-2. The PRIMARY JUDGE's decision is FINAL and READ-ONLY
-3. Your task: Explain WHY the judgment was made based on observation data
-4. If you find yourself using common sense (e.g., "this is a hand", "fingers"), STOP and acknowledge it
-5. Focus on structural data, NOT semantic interpretation
+        """Build explanation prompt for Stage 2"""
+        return f"""You are an explanation generator. Describe how the decision was made based on the observation data.
 
 CONTEXT:
 {context}
 
-YOUR TASK:
-Explain the PRIMARY JUDGE's decision based ONLY on the structural measurements provided.
-If you notice yourself using prior knowledge (common sense), explicitly mention it as "PRIOR_INTRUSION".
+TASK:
+Explain the decision based on the structural measurements provided.
+Avoid using concept labels like "hand" or "finger" - stick to structural terms.
+If you use common sense, mention "PRIOR_INTRUSION" explicitly.
 
 EXPLANATION:"""
 
@@ -397,40 +381,25 @@ EXPLANATION:"""
             return "ERROR"
 
     def _detect_prior_intrusion(self, response: str) -> Tuple[bool, str]:
-        """상식 침투 감지"""
+        """Detect use of concept labels in explanation"""
 
-        # 명시적 PRIOR_INTRUSION 선언
+        # Check for explicit acknowledgment
         if "PRIOR_INTRUSION" in response.upper():
-            return True, "Explicitly acknowledged by narrator"
+            return True, "Explicitly acknowledged"
 
-        # 개념 라벨 사용 감지
-        concept_keywords = [
-            "hand", "finger", "thumb", "palm", "digit",
-            "손", "손가락", "엄지", "손바닥",
-        ]
-
+        # Check for concept labels (quality control)
+        concept_keywords = ["hand", "finger", "thumb", "palm", "digit"]
         response_lower = response.lower()
         found_concepts = [kw for kw in concept_keywords if kw in response_lower]
 
         if found_concepts:
-            return True, f"Concept labels used: {', '.join(found_concepts)}"
-
-        # 상식 기반 추론 패턴
-        prior_patterns = [
-            "normally", "usually", "typically", "common",
-            "보통", "일반적으로", "대개",
-        ]
-
-        found_priors = [p for p in prior_patterns if p in response_lower]
-
-        if found_priors:
-            return True, f"Prior-based reasoning: {', '.join(found_priors)}"
+            return True, f"Concept labels: {', '.join(found_concepts)}"
 
         return False, ""
 
 
 class TwoStageJudgmentPipeline:
-    """2단계 판단 파이프라인: TinyLlama (판정) + Mistral (서술)"""
+    """Two-stage pipeline: phi3 (decision) + Mistral (explanation)"""
 
     def __init__(self, ollama_host: str = "http://localhost:11434"):
         self.ollama_host = ollama_host
@@ -442,12 +411,12 @@ class TwoStageJudgmentPipeline:
         observation: ObservationRecord,
     ) -> TwoStagePipelineResult:
         """
-        파이프라인 실행
+        Execute two-stage pipeline
 
-        흐름:
-        1. Stage 1 (TinyLlama): 판정
-        2. If STOP/INDETERMINATE → 종료
-        3. If VALUE → Stage 2 (Mistral): 서술
+        Flow:
+        1. Stage 1 (phi3): Make decision
+        2. If STOP/INDETERMINATE → Early termination
+        3. If VALUE → Stage 2 (Mistral): Generate explanation
         """
         logger.info("\n")
         logger.info("╔" + "=" * 78 + "╗")
