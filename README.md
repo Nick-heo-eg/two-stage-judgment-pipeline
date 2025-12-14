@@ -146,6 +146,9 @@ Final Decision: VALUE = 6
 |------|------------------|---------------|-----------------|--------|
 | fingers2.jpg | 6 protrusions | VALUE = 6 | 3/3 (100%) | ✅ PASS |
 
+**Note on Validation Scope:**
+This is a proof-of-concept demonstrating architectural feasibility. The single test image validates that the pipeline works as designed (observation → decision → explanation separation). For production use, comprehensive testing with diverse images, ground truth validation, and failure case analysis would be required.
+
 ### Success Criteria
 
 | Criterion | Status | Evidence |
@@ -266,7 +269,21 @@ pipeline = TwoStageJudgmentPipeline(
 
 ## 🤝 Contributing
 
-Contributions welcome! Please:
+Contributions welcome! Areas for improvement:
+
+**Validation Enhancement:**
+- Additional test images with diverse protrusion counts
+- Ground truth labeling for accuracy measurement
+- Negative control tests (noise images → STOP expected)
+- Prior intrusion triggering tests
+
+**Pipeline Improvements:**
+- Alternative observation methods (MediaPipe, YOLO, etc.)
+- Different model combinations
+- Performance optimization
+- Error handling edge cases
+
+Please:
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
