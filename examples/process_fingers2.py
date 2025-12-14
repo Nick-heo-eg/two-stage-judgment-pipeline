@@ -17,12 +17,11 @@ logger = logging.getLogger(__name__)
 
 
 def find_fingers2_image():
-    """Auto-discover fingers2 image in Downloads folder"""
+    """Auto-discover test image - update paths as needed"""
     search_patterns = [
-        "/mnt/c/Users/*/Downloads/fingers2.*",
-        "/mnt/c/Users/*/Downloads/fingers2.jpeg",
-        "/mnt/c/Users/*/Downloads/fingers2.jpg",
-        "/mnt/c/Users/*/Downloads/fingers2.png",
+        "./test_images/fingers2.*",
+        "./examples/fingers2.*",
+        "../fingers2.*",
     ]
 
     for pattern in search_patterns:
@@ -37,14 +36,12 @@ def find_fingers2_image():
 
 def extract_structural_features(image_path):
     """
-    OpenCV external observation - NO concept labels allowed
+    OpenCV external observation layer
 
     Extracts structural primitives:
     - Protrusions (peaks)
     - Valleys (gaps)
-    - Defects
-
-    Forbidden: hand, finger, thumb, knuckle, palm
+    - Convexity defects
     """
     logger.info(f"Processing image: {image_path}")
 

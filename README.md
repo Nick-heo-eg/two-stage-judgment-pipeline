@@ -8,12 +8,9 @@
 
 ## 🎯 Overview
 
-This system demonstrates **LLM-based judgment using structured observation data and two-stage processing for improved accuracy**.
+This system demonstrates **LLM-based judgment using structured observation data and two-stage processing**.
 
-> **This system does not aim to improve model intelligence.
-> It aims to relocate responsibility.**
-
-Instead of asking "how well can LLMs judge?", we ask "where should judgment happen?" By separating observation (OpenCV), decision (phi3), and explanation (Mistral) into distinct stages, we can verify which component failed when errors occur.
+By separating observation (OpenCV), decision (phi3), and explanation (Mistral) into distinct stages, we can trace how decisions are made and verify component behaviors.
 
 ### Key Innovation
 
@@ -112,7 +109,7 @@ print(f"Final Decision: {result.final_state} = {result.final_value}")
 ### Example: Process Real Image
 
 ```bash
-# Place your image in Downloads folder as fingers.jpg
+# Place your test image and update the path in the script
 python examples/process_fingers2.py
 ```
 
@@ -217,7 +214,7 @@ Processes images through OpenCV to extract **structural features**:
 
 This provides numeric data for LLM processing without semantic labels.
 
-**Why this matters:** Traditional vision-LLMs receive images directly, mixing observation and interpretation in one step. By separating them, we can verify: "Did the observation fail, or did the judgment fail?" This is the difference between debugging a black box and debugging a pipeline.
+**Why this matters:** By separating observation and interpretation, we can trace which component produces each part of the output.
 
 ### Two-Stage Processing
 
@@ -231,7 +228,7 @@ This provides numeric data for LLM processing without semantic labels.
   - Uses observation data and Stage 1 result
   - Generates natural language descriptions
 
-**The key insight:** Stage 1 doesn't "understand" fingers - it extracts numbers from structured data. Stage 2 doesn't "judge" - it translates the decision into language. Neither component does everything, so neither can hide its failures behind the other's success.
+**The key insight:** Stage 1 extracts values from structured data. Stage 2 generates natural language descriptions. Each stage has a specific role.
 
 ### Quality Monitoring
 
@@ -310,8 +307,8 @@ If you use this work in your research, please cite:
 
 ```bibtex
 @software{two_stage_judgment_2025,
-  title = {Two-Stage Judgment Pipeline: Concept-Free LLM Inference},
-  author = {Echo Judgment System Team},
+  title = {Two-Stage Judgment Pipeline: Structured LLM Inference},
+  author = {Two-Stage Pipeline Contributors},
   year = {2025},
   url = {https://github.com/Nick-heo-eg/two-stage-judgment-pipeline}
 }
