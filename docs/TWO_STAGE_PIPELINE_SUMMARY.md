@@ -210,7 +210,7 @@ def _detect_prior_intrusion(response):
   "bbox_width": 708,
   "bbox_height": 1326,
   "aspect_ratio": 0.5339366515837104,
-  "image_path": "/mnt/c/Users/허은구/Downloads/fingers.jpeg",
+  "image_path": "/path/to/fingers.jpeg",
   "processing_method": "opencv_convexity_defects"
 }
 ```
