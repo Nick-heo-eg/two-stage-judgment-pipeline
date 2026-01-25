@@ -1,11 +1,31 @@
 # Two-Stage Judgment Pipeline
 
+## Project Status
+
+This repository contains an **early experimental prototype** used to explore whether judgment can be separated from language models.
+
+The experiment successfully demonstrated the concept, but this repository is **no longer maintained or intended for reuse**.
+
+### If you came here from the "6-finger test" discussion
+
+You likely read an earlier experiment exploring whether **judgment happens inside the model or outside it**.
+
+That experiment demonstrated *why test framing matters*, not which model is "better". The original code and logs are preserved as historical evidence, but the work has since shifted toward documenting **how execution and permission should be structured**.
+
+### What to look at now
+
+➡️ **For current work focused on execution governance and responsibility:**
+- **Execution precondition layer**: https://github.com/Nick-heo-eg/k-judgment-gate
+- **Conceptual structure**: https://github.com/Nick-heo-eg/execution-governance-spec
+
+---
+
 > **LLM-based judgment using external observation and two-stage processing.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-**Note**: This is a public demo repository. For access to the full implementation, contact the repository owner.
+**Note**: This is a public demo repository documenting an experimental approach. The architecture below represents a historical exploration, not a recommended production pattern.
 
 ## 🎯 Overview
 
