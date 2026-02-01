@@ -1,5 +1,16 @@
 # Two-Stage Judgment Pipeline
 
+## Position
+
+This repository is part of the **Judgment Boundary** work:
+a set of experiments and specifications focused on
+*when AI systems must stop or not execute*.
+
+See the overarching map:
+→ https://github.com/Nick-heo-eg/stop-first-rag/blob/main/JUDGMENT_BOUNDARY_MANIFEST.md
+
+---
+
 ## Project Status
 
 This repository contains an **early experimental prototype** used to explore whether judgment can be separated from language models.
